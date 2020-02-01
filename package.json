@@ -1,7 +1,6 @@
 {
   "name": "zenaton-example-app",
   "version": "0.1.0",
-  "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
@@ -33,5 +32,23 @@
     "vue-cli-plugin-express": "^1.0.2",
     "vue-cli-plugin-tailwind": "^1.1.0",
     "vue-template-compiler": "^2.6.10"
-  }
+  },
+  "description": "Example app dispatching Zenaton workflows and events",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zenaton/nodejs-example-app.git"
+  },
+  "keywords": [
+    "zenaton",
+    "workflow",
+    "automation",
+    "example"
+  ],
+  "author": "Zenaton, Inc",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zenaton/nodejs-example-app/issues"
+  },
+  "homepage": "https://github.com/zenaton/nodejs-example-app#readme"
 }
