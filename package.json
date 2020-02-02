@@ -4,11 +4,11 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "watch": "vue-cli-service build --watch",
+    "build:watch": "vue-cli-service build --watch",
     "lint": "vue-cli-service lint",
-    "express": "vue-cli-service express:watch",
-    "express:run": "vue-cli-service express:run",
-    "postinstall": "cp -n .env.sample $INIT_CWD/.env"
+    "express:watch": "vue-cli-service express:watch",
+    "express": "vue-cli-service express:run",
+    "postinstall": "cp -n .env.sample $INIT_CWD/.env || :"
   },
   "dependencies": {
     "codemirror": "^5.51.0",

@@ -1,5 +1,5 @@
 import express from "express";
-import zenaton from "../src/zenaton_client";
+import zenaton from "../src/zenaton";
 const publicPath = __dirname + "/../dist";
 
 export default app => {
@@ -28,7 +28,6 @@ export default app => {
       } with data: ${JSON.stringify(req.body.data, null, 2)}`
     );
 
-    // Send an event to a Zenaton Workflow instance
     await zenaton.select
       .workflow()
       .withId(req.params.workflow_id)
