@@ -5,7 +5,11 @@
         <h2>#1 Dispatch Workflow</h2>
       </div>
       <div class="md:w-1/2">
-        <CustomSelect :options="workflows" @change="change" />
+        <CustomSelect
+          v-if="workflows.length > 1"
+          :options="workflows"
+          @change="change"
+        />
       </div>
     </div>
     <div class="mb-4">
