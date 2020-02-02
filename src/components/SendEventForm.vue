@@ -111,11 +111,11 @@ export default {
     validateForm() {
       this.errors = {};
       if (this.name == "") {
-        this.errors.name = "required";
+        this.errors.name = "Required";
       }
 
       if (!this.workflowId) {
-        this.errors.workflowId = "required";
+        this.errors.workflowId = "Required";
       }
 
       try {
