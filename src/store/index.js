@@ -24,10 +24,13 @@ export default new Vuex.Store({
     },
     selectWorkflowInstance(state, id) {
       const i = state.workflowInstances.find(w => w.id === id);
-      const w = state.workflowTypes.find(w => w.name === i.name);
       state.event.workflowId = id;
-      state.event.name = w.event.name ? w.event.name : "";
-      state.event.data = w.event.data ? JSON.stringify(w.event.data) : "[]";
+      // do we have some events associated?
+      const w = state.workflowTypes.find(w => w.name === i.name);
+      if (w) {
+        state.event.name = w.event.name ? w.event.name : "";
+        state.event.data = w.event.data ? JSON.stringify(w.event.data) : "[]";
+      }
     },
     updateWorkflowName(state, name) {
       state.workflow.name = name;
