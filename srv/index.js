@@ -10,7 +10,7 @@ export default app => {
     console.log(
       `Dispatch a new instance of ${
         req.params.workflow_name
-      } with inputs params: ${JSON.stringify(req.body, null, 2)}`
+      } with input: ${JSON.stringify(req.body, null, 2)}`
     );
 
     const { id } = await zenaton.run.workflow(
@@ -23,7 +23,7 @@ export default app => {
 
   app.post("/api/:workflow_id/event", async (req, res) => {
     console.log(
-      `Send an event ${req.body.name} to the instance ${
+      `Send an event ${req.body.name} to instance ${
         req.params.workflow_id
       } with data: ${JSON.stringify(req.body.data, null, 2)}`
     );

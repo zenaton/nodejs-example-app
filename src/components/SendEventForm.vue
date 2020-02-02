@@ -2,16 +2,15 @@
   <form @submit="submit" class="px-8 pt-6 pb-8 mh-480">
     <h2 class="pb-6">#2 Send Event to a Workflow</h2>
     <div class="mb-4">
-      <label
-        class="block text-gray-700 text-sm font-bold mb-2"
-        for="workflow_selection"
+      <label class="block text-gray-700 text-sm font-bold mb-2" for="workflowId"
         >Workflow ID</label
       >
       <CustomSelect
-        v-model="workflow_selection"
-        :options="workflow_instances"
+        :value="workflowId"
+        :options="workflowInstances"
+        @change="change"
       />
-      <FieldErrorMessage :error="errors.workflow_selection" />
+      <FieldErrorMessage :error="errors.workflowId" />
     </div>
 
     <div class="mb-4">
@@ -22,7 +21,7 @@
         class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         id="event_name"
         type="text"
-        placeholder="Event name. ex: MyEvent"
+        placeholder="Event name"
         v-model="name"
       />
       <FieldErrorMessage :error="errors.name" />
@@ -57,22 +56,19 @@ export default {
   data() {
     return {
       errors: {
-        workflow_selection: null,
+        workflowId: null,
         name: null,
         data: null
       }
-      // workflow_selection: ""
     };
   },
   computed: {
-    workflow_instances() {
-      return [{ value: 0, text: "-- Choose an instance --" }].concat(
-        this.$store.state.workflow_instances
-          .filter(x => x.name === this.$store.state.workflow.name)
-          .map(x => ({
-            value: x.id,
-            text: `${x.name} - ${x.id}`
-          }))
+    workflowInstances() {
+      return [{ value: null, text: "-- Choose an instance --" }].concat(
+        this.$store.state.workflowInstances.map(x => ({
+          value: x.id,
+          text: `${x.name} - ${x.id}`
+        }))
       );
     },
     name: {
@@ -80,7 +76,7 @@ export default {
         return this.$store.state.event.name;
       },
       set(name) {
-        this.$store.dispatch("updateEventName", name);
+        this.$store.commit("updateEventName", name);
       }
     },
     data: {
@@ -88,19 +84,17 @@ export default {
         return this.$store.state.event.data;
       },
       set(data) {
-        this.$store.dispatch("updateEventData", data);
+        this.$store.commit("updateEventData", data);
       }
     },
-    workflow_selection: {
-      get() {
-        return this.$store.state.workflow_selection;
-      },
-      set(data) {
-        this.$store.dispatch("selectWorkflowId", data);
-      }
+    workflowId() {
+      return this.$store.state.event.workflowId;
     }
   },
   methods: {
+    change(id) {
+      this.$store.commit("selectWorkflowInstance", id);
+    },
     submit(e) {
       e.preventDefault();
 
@@ -109,11 +103,9 @@ export default {
       }
 
       this.$store.dispatch("sendEvent", {
-        event: {
-          name: this.name,
-          data: this.data
-        },
-        workflow_selection: this.workflow_selection
+        workflowId: this.workflowId,
+        name: this.name,
+        data: this.data
       });
     },
     validateForm() {
@@ -122,13 +114,15 @@ export default {
         this.errors.name = "required";
       }
 
-      console.log("-> this.workflow_selection", typeof this.workflow_selection);
-      if (this.workflow_selection == "") {
-        this.errors.workflow_selection = "required";
+      if (!this.workflowId) {
+        this.errors.workflowId = "required";
       }
 
       try {
-        JSON.parse(this.data);
+        const i = JSON.parse(this.data);
+        if (!Array.isArray(i)) {
+          this.errors.data = "Must be an array";
+        }
       } catch (e) {
         this.errors.data = "Invalid JSON";
       }

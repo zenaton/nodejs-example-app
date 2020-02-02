@@ -1,39 +1,34 @@
 import Vue from "vue";
 import Vuex from "vuex";
-
-import { default_workflow, workflows } from "../config";
 import Api from "../services/zenaton";
 
 Vue.use(Vuex);
 
-const getInputByWorkflowName = name => {
-  return workflows.find(w => w.name === name)["input"];
-};
-const getEventByWorkflowName = name => {
-  return workflows.find(w => w.name === name)["event"];
-};
-const default_event = getEventByWorkflowName(default_workflow);
-
 export default new Vuex.Store({
   state: {
-    workflow: {
-      name: default_workflow,
-      input: JSON.stringify(getInputByWorkflowName(default_workflow), null, 2)
-    },
-    event: {
-      name: default_event.name || "",
-      data:
-        (default_event.data && JSON.stringify(default_event.data, null, 2)) ||
-        ""
-    },
-    logs: {
-      workflow: [],
-      event: []
-    },
-    workflow_instances: [],
-    workflow_selection: null
+    workflowTypes: [],
+    workflow: { name: "", input: "[]" },
+    event: { name: "", data: "[]", workflowId: null },
+    logs: { workflow: [], event: [] },
+    workflowInstances: []
   },
   mutations: {
+    setConfig(state, config) {
+      const { workflows } = config;
+      state.workflowTypes = workflows;
+    },
+    selectWorkflowType(state, name) {
+      state.workflow.name = name;
+      const w = state.workflowTypes.find(w => w.name === name);
+      state.workflow.input = w.input ? JSON.stringify(w.input) : "[]";
+    },
+    selectWorkflowInstance(state, id) {
+      const i = state.workflowInstances.find(w => w.id === id);
+      const w = state.workflowTypes.find(w => w.name === i.name);
+      state.event.workflowId = id;
+      state.event.name = w.event.name ? w.event.name : "";
+      state.event.data = w.event.data ? JSON.stringify(w.event.data) : "[]";
+    },
     updateWorkflowName(state, name) {
       state.workflow.name = name;
     },
@@ -46,65 +41,42 @@ export default new Vuex.Store({
     updateEventData(state, data) {
       state.event.data = data;
     },
+    updateEventWorkflow(state, workflowId) {
+      state.event.workflowId = workflowId;
+    },
     addLog(state, { logtype, log }) {
       state.logs[logtype] = [...state.logs[logtype], log];
     },
     addWorkflowInstance(state, instance) {
-      state.workflow_instances = [...state.workflow_instances, instance];
-    },
-    selectWorkflowId(state, workflowId) {
-      state.workflow_selection = workflowId;
+      state.workflowInstances = [...state.workflowInstances, instance];
     }
   },
   actions: {
-    updateWorkflowName({ commit }, name) {
-      commit("updateWorkflowName", name);
-      const input = JSON.stringify(getInputByWorkflowName(name), null, 2);
-      const eventRaw = getEventByWorkflowName(name);
-      const event = {
-        name: eventRaw.name,
-        data: JSON.stringify(eventRaw.data, null, 2)
-      };
-      commit("updateWorkflowInput", input);
-      commit("updateEventName", event.name);
-      commit("updateEventData", event.data);
-      commit("selectWorkflowId", "");
-    },
-    updateWorkflowInput({ commit }, input) {
-      commit("updateWorkflowInput", input);
-    },
-    updateEventName({ commit }, name) {
-      commit("updateEventName", name);
-    },
-    updateEventData({ commit }, data) {
-      commit("updateEventData", data);
-    },
-    selectWorkflowId({ commit }, data) {
-      commit("selectWorkflowId", data);
+    async getConfig({ commit }) {
+      const config = await Api.getConfig();
+      commit("setConfig", config);
+      if (config.workflows.length > 0) {
+        commit("selectWorkflowType", config.workflows[0].name);
+      }
     },
     async dispatchWorkflow({ commit }, { name, input }) {
-      console.log("dispatchWorkflow", name, input);
+      const id = await Api.dispatchWorkflow(name, input);
 
-      const id = await Api.dispatch(name, input);
       commit("addLog", {
         logtype: "workflow",
-        log: `<span class="text-gray-600">[${new Date().toISOString()}]</span> Dispatch <span class="text-yellow-400">${name}</span> with id <span class="text-green-400">${id}</span>`
+        log: `<span class="text-gray-600">[${new Date().toISOString()}]</span> <span class="text-yellow-400">${name}</span> dispatched with id <span class="text-green-400">${id}</span>`
       });
 
       commit("addWorkflowInstance", { name, id });
+      // preselect the last dispatched workflow
+      commit("selectWorkflowInstance", id);
     },
-    async sendEvent(context, { event, workflow_selection }) {
-      console.log("sendEvent", workflow_selection, event);
-
-      await Api.sendEvent(workflow_selection, event.name, event.data);
+    async sendEvent(context, { workflowId, name, data }) {
+      await Api.sendEvent(workflowId, name, data);
 
       context.commit("addLog", {
         logtype: "event",
-        log: `<span class="text-gray-600">[${new Date().toISOString()}]</span> Send event <span class="text-blue-400">${
-          event.name
-        }</span> to workflow <span class="text-yellow-400">${
-          context.state.workflow.name
-        }</span> with id <span class="text-green-400">${workflow_selection}</span>`
+        log: `<span class="text-gray-600">[${new Date().toISOString()}]</span> event <span class="text-blue-400">${name}</span> sent to workflow with id <span class="text-green-400">${workflowId}</span>`
       });
     }
   },

@@ -1,20 +1,31 @@
 <template>
   <form @submit="submit" class="px-8 pt-6 pb-8 mh-400">
-    <h2 class="pb-6">#1 Dispatch Workflow</h2>
+    <div class="md:flex md:items-center mb-4">
+      <div class="md:w-1/2">
+        <h2>#1 Dispatch Workflow</h2>
+      </div>
+      <div class="md:w-1/2">
+        <CustomSelect :options="workflows" @change="change" />
+      </div>
+    </div>
     <div class="mb-4">
-      <label
-        class="block text-gray-700 text-sm font-bold mb-2"
-        for="workflow_name"
+      <label class="block text-gray-700 text-sm font-bold mb-2" for="event_name"
         >Workflow name</label
       >
-      <CustomSelect v-model="name" :options="workflow_autocomplete" />
+      <input
+        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        id="event_name"
+        type="text"
+        placeholder="Workflow name"
+        v-model="name"
+      />
+      <FieldErrorMessage :error="errors.name" />
     </div>
-
     <div class="mb-4">
       <label class="block text-gray-700 text-sm font-bold mb-2" for="input"
         >Workflow input</label
       >
-      <json-textarea id="workflow_input" v-model="wfinput" />
+      <json-textarea id="workflow_input" v-model="input" />
       <FieldErrorMessage :error="errors.input" />
     </div>
     <submit-button :onClick="submit">Dispatch</submit-button>
@@ -26,7 +37,6 @@ import JsonTextarea from "../components/JsonTextarea.vue";
 import SubmitButton from "../components/SubmitButton.vue";
 import CustomSelect from "../components/CustomSelect.vue";
 import FieldErrorMessage from "../components/FieldErrorMessage.vue";
-import { workflows } from "../config";
 
 export default {
   name: "DispatchForm",
@@ -50,22 +60,34 @@ export default {
         return this.$store.state.workflow.name;
       },
       set(name) {
-        this.$store.dispatch("updateWorkflowName", name);
+        this.$store.commit("updateWorkflowName", name);
       }
     },
-    wfinput: {
+    input: {
       get() {
         return this.$store.state.workflow.input;
       },
       set(input) {
-        this.$store.dispatch("updateWorkflowInput", input);
+        this.$store.commit("updateWorkflowInput", input);
       }
     },
-    workflow_autocomplete() {
-      return workflows.map(x => ({ value: x.name, text: x.name }));
+    workflows() {
+      return [{ value: null, text: "-- Choose an workflow --" }].concat(
+        this.$store.state.workflowTypes.map(x => {
+          return {
+            value: x.name,
+            text: x.name
+          };
+        })
+      );
     }
   },
   methods: {
+    change(name) {
+      if (name) {
+        this.$store.commit("selectWorkflowType", name);
+      }
+    },
     submit(e) {
       e.preventDefault();
 
@@ -75,7 +97,7 @@ export default {
 
       this.$store.dispatch("dispatchWorkflow", {
         name: this.name,
-        input: this.wfinput
+        input: this.input
       });
     },
     validateForm() {
@@ -85,7 +107,10 @@ export default {
       }
 
       try {
-        JSON.parse(this.wfinput);
+        const i = JSON.parse(this.input);
+        if (!Array.isArray(i)) {
+          this.errors.input = "Must be an array";
+        }
       } catch (e) {
         this.errors.input = "Invalid JSON";
       }

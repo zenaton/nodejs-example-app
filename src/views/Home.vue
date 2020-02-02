@@ -36,6 +36,9 @@ export default {
     logs() {
       return this.$store.state.logs;
     }
+  },
+  mounted() {
+    this.$store.dispatch("getConfig");
   }
 };
 </script>
