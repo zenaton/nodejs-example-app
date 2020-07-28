@@ -1,3 +1,5 @@
+> ⚠️ This repository is abandoned.
+
 # Example of Web App Using Zenaton
 This web app proposes a simple UI to dispatch Zenaton workflows and sends events to them. 
 
